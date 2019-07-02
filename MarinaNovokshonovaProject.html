@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<link href="https://unpkg.com/tabulator-tables@4.2.7/dist/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.2.7/dist/js/tabulator.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<h3>Marina Novokshonova</h3>
+<h4>Transaction table</h4>
+<div id="supertable"></div>
+<h4>Rating of payment methods:</h4>
+<div id="rating"></div>
+<h4>Chart of payment methods:</h4>
+<div id="chart"></div>
+
+<script>
+    var url = 'https://gist.githubusercontent.com/NikitaBonachev/870f68699f9a7bbf8d5c1434f6c7c3d1/raw/8d45e0f5b60b9dd6a5da1f0c957f3a22031fe102/data.json';
+    $.getJSON( url, function( t ) {
+        console.log(t.length);
+        console.log(t[0].user.name);
+        var table = new Tabulator("#supertable", {
+            data: t,
+            layout:"fitColumns",
+            groupBy:"transaction.payment_method.name",
+            columns:[
+                {title:"Transaction_project", field:"transaction.project.name", headerFilter:true, align:"center"},
+                {title:"User", field:"user.id", align:"center", headerFilter:true},
+                {title:"Payment_method", field:"transaction.payment_method.name", headerFilter:true, align:"center"},
+                {title:"Payment_details", field:"payment_details.payment.currency", headerFilter:true, align:"center"},
+            ],
+        });
+        var superrating = {};
+        for (var i = 0; i < t.length; i++) {
+            var tr_pm_name = t[i].transaction.payment_method.name;
+            if (superrating[tr_pm_name]) {
+                superrating[tr_pm_name] = superrating[tr_pm_name] + 1;
+            } else {
+                superrating[tr_pm_name] = 1;
+            }
+        };
+        console.log(superrating);
+        var arrayofsuperrating = Object.entries(superrating);
+        console.log(arrayofsuperrating);
+
+        for (var u in superrating) {
+            $("#rating").append( u + " : " + superrating[u] + "<br>");
+        };
+
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Topping');
+        data.addColumn('number', 'Slices');
+        data.addRows(arrayofsuperrating);
+        var options = {'title':'Payment methods',
+            'width':700,
+            'height':600};
+        var chart = new google.visualization.PieChart(document.getElementById('chart'));
+        chart.draw(data, options);
+    }
+
+    });
+</script>
+
+</body>
+</html>
